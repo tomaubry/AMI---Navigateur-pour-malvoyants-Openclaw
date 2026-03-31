@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr" class="is-loading">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ami — Agent Vocal IA</title>
+
+  <!-- Splash timing: démarre le chrono le plus tôt possible -->
+  <script>
+    window.__splashStart = performance.now();
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #000000;
+      color: #ededed;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Splash screen (au refresh) ─────────────────────────────────────────── */
+    .is-loading body {
+      overflow: hidden;
+    }
+
+    .splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      background: #000;
+      color: #ededed;
+      overflow: hidden;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 420ms ease, visibility 420ms ease;
+    }
+
+    /* Fond "tech" : grille subtile + scan line rapide */
+    .splash::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.22;
+      transform: translateZ(0);
+      animation: splash-grid 1.9s linear infinite;
+      pointer-events: none;
+    }
+
+    .splash::after {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.10), transparent 55%),
+        linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+      opacity: 0.55;
+      transform: translateZ(0);
+      animation: splash-scan 1.35s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .splash--hide {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .splash__inner {
+      width: min(520px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.25rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .splash__mark {
+      position: relative;
+      width: clamp(140px, 18vw, 210px);
+      height: clamp(140px, 18vw, 210px);
+      display: grid;
+      place-items: center;
+    }
+
+    .splash__ring {
+      position: absolute;
+      inset: -18px;
+      border-radius: 999px;
+      background: conic-gradient(
+        from 180deg,
+        rgba(255, 255, 255, 0.00),
+        rgba(255, 255, 255, 0.20),
+        rgba(255, 255, 255, 0.00),
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0.00)
+      );
+      -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      opacity: 0.85;
+      animation: splash-rotate 900ms linear infinite;
+      filter: drop-shadow(0 12px 40px rgba(255, 255, 255, 0.10));
+    }
+
+    .splash__logo {
+      width: 100%;
+      height: 100%;
+      display: block;
+      color: #ffffff;
+      filter: drop-shadow(0 12px 40px rgba(255, 255, 255, 0.12));
+      animation: splash-float 1.8s ease-in-out infinite;
+    }
+
+    .splash__title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .splash__tagline {
+      font-size: 1rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.86);
+      letter-spacing: 0.01em;
+    }
+
+    .splash__dots {
+      display: inline-flex;
+      gap: 0.35rem;
+      height: 10px;
+      align-items: center;
+      opacity: 0.9;
+    }
+
+    .splash__dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      animation: splash-dot 900ms ease-in-out infinite;
+    }
+
+    .splash__dots span:nth-child(2) {
+      animation-delay: 120ms;
+    }
+
+    .splash__dots span:nth-child(3) {
+      animation-delay: 240ms;
+    }
+
+    @keyframes splash-grid {
+      from {
+        background-position: 0 0, 0 0;
+      }
+
+      to {
+        background-position: 48px 48px, 48px 48px;
+      }
+    }
+
+    @keyframes splash-scan {
+      0%,
+      100% {
+        transform: translateY(-2%);
+        opacity: 0.40;
+      }
+
+      50% {
+        transform: translateY(2%);
+        opacity: 0.70;
+      }
+    }
+
+    @keyframes splash-rotate {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes splash-float {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    @keyframes splash-dot {
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.35;
+      }
+
+      50% {
+        transform: translateY(-3px);
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .splash__logo,
+      .splash__ring,
+      .splash__dots span {
+        animation: none !important;
+      }
+
+      .splash::before,
+      .splash::after {
+        animation: none !important;
+      }
+
+      .splash {
+        transition: none;
+      }
+    }
+
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+      background: #000000;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      color: #ffffff;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    header span {
+      font-size: 0.95rem;
+      color: #ffffff;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Panneau gauche — contrôles + transcription */
+    .panel-left {
+      width: 320px;
+      flex-shrink: 0;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      background: #050505;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    /* Panneau droit — noVNC */
+    .panel-right {
+      flex: 1;
+      background: #000;
+      min-width: 0;
+      position: relative;
+    }
+
+    .panel-right iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #000;
+    }
+
+    /* ── Bouton principal ────────────────────────────────────────────────────── */
+    .btn-talk {
+      width: 100%;
+      padding: 1rem 1rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      transition: all 0.2s ease;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .btn-talk:active {
+      transform: scale(0.98);
+    }
+
+    .btn-talk:focus-visible {
+      outline: none;
+      border-color: #ededed;
+    }
+
+    /* État : non connecté */
+    .btn-talk.disconnected {
+      color: #ededed;
+    }
+
+    .btn-talk.disconnected:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* État : chargement (bonjour en cours) */
+    .btn-talk.loading {
+      color: #666666;
+      border-color: rgba(255, 255, 255, 0.05);
+      cursor: default;
+    }
+
+    /* État : prêt, attend le tap utilisateur */
+    .btn-talk.waiting {
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-talk.waiting:hover {
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    /* État : écoute active — micro ouvert */
+    .btn-talk.listening {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.5);
+      animation: pulse-border 1.5s infinite;
+    }
+
+    @keyframes pulse-border {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+      }
+    }
+
+    /* État : Ami parle / réfléchit — discret, pas d'animation */
+    .btn-talk.busy {
+      color: #a3a3a3;
+      border-color: rgba(163, 163, 163, 0.3);
+      cursor: default;
+    }
+
+    /* ── Bouton Fin de conversation ──────────────────────────────────────────── */
+    .btn-reset {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #666666;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .btn-reset:hover {
+      color: #ededed;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-reset:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* ── Status ──────────────────────────────────────────────────────────────── */
+    .status {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.4;
+      min-height: 2.4em;
+    }
+
+    /* ── Transcription ───────────────────────────────────────────────────────── */
+    .transcript {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      font-weight: 400;
+      padding: 1rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .transcript::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    .transcript::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .msg {
+      margin-bottom: 0;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      max-width: 88%;
+      width: fit-content;
+      word-wrap: break-word;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: #2563eb;
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .msg.ami {
+      align-self: flex-start;
+      background: #27272a;
+      color: #ededed;
+      border-bottom-left-radius: 2px;
+    }
+
+    .msg.nav {
+      align-self: center;
+      background: transparent;
+      color: #71717a;
+      font-style: italic;
+      font-size: 0.75rem;
+      padding: 0.25rem;
+      text-align: center;
+      max-width: 100%;
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Splash / écran de chargement (visible au refresh) -->
+  <div id="splash" class="splash" role="status" aria-live="polite" aria-label="Chargement">
+    <div class="splash__inner">
+      <div class="splash__mark" aria-hidden="true">
+        <div class="splash__ring"></div>
+        <svg class="splash__logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+          stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Logo Ami">
+          <path d="M12 2L2 22l10-6 10 6L12 2z"></path>
+          <path d="M12 2v14"></path>
+        </svg>
+      </div>
+      <div class="splash__title">AMI</div>
+      <div class="splash__tagline">Le web pour tous, sans exception.</div>
+      <div class="splash__dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <h1>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+        <path d="M12 2L2 22l10-6 10 6L12 2z"></path>
+        <path d="M12 2v14"></path>
+      </svg>
+      AMI
+    </h1>
+    <span>Le web pour tous, sans exception.</span>
+  </header>
+  <div class="layout">
+    <div class="panel-left">
+
+      <button id="btn" class="btn-talk disconnected" onclick="handleTap()"
+        aria-label="Bouton principal Ami — Espace pour activer">
+        Démarrer
+      </button>
+
+      <p id="status" class="status" aria-live="polite">
+        Appuyez sur le bouton ou sur Espace pour démarrer
+      </p>
+
+      <div id="transcript" class="transcript" aria-live="polite" aria-label="Conversation"></div>
+
+      <button id="btn-reset" class="btn-reset" onclick="resetConversation()"
+        aria-label="Fin de conversation — réinitialiser [Ctrl]">
+        Fin de conversation [Ctrl]
+      </button>
+
+    </div>
+    <div class="panel-right">
+      <iframe src="/novnc/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&path=novnc/"
+        title="Navigateur en direct" allowfullscreen></iframe>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const MIN_MS = 1400; // un peu plus long, rendu plus premium
+
+      function hideSplash() {
+        const splash = document.getElementById('splash');
+        if (!splash) return;
+
+        const elapsed = performance.now() - (window.__splashStart || 0);
+        const wait = Math.max(0, MIN_MS - elapsed);
+
+        window.setTimeout(() => {
+          splash.classList.add('splash--hide');
+          document.documentElement.classList.remove('is-loading');
+          splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+        }, wait);
+      }
+
+      // window.load : images + iframe initial chargés
+      window.addEventListener('load', hideSplash, { once: true });
+
+      // fallback : si un élément bloque l'événement load
+      window.setTimeout(hideSplash, 4000);
+    })();
+  </script>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

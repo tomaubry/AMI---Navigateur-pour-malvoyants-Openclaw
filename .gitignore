@@ -1,0 +1,42 @@
+# Environment files
+.env
+*.env
+.env.*
+# Modèles vides — versionnés volontairement
+!.env.example
+!**/.env.example
+
+# Python virtual environments
+venv/
+.venv/
+agent/venv/
+agent/.venv/
+
+# Node dependencies
+node_modules/
+orchestrator/node_modules/
+agent/node_modules/
+
+# Compiled / cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs and temp data
+.tmp/
+*.log
+
+# Build/artifact folders
+_bmad/
+_bmad-output/
+
+# Credentials (handled outside of git)
+credentials.json
+token.json
+
+# Internal agent metadata
+.agent/
+
+# Aider (historique local, ne pas versionner)
+**/.aider*
+agent/.aider*
